@@ -1,5 +1,5 @@
-import type { Express, Request, Response, NextFunction } from "express";
-import { createServer, type Server } from "http";
+import type { Express } from "express";
+import type { Server } from "http";
 import http from "http";
 import { spawn } from "child_process";
 import path from "path";
@@ -11,8 +11,17 @@ let fastapiProcess: any = null;
 function startFastAPI(): Promise<void> {
   return new Promise((resolve, reject) => {
     console.log("Starting FastAPI backend on port", FASTAPI_PORT);
-    
-    fastapiProcess = spawn("python", ["-m", "uvicorn", "backend.main:app", "--reload", "--host", "0.0.0.0", "--port", String(FASTAPI_PORT)], {
+
+    const args = [
+      "-m", "uvicorn", "backend.main:app",
+      "--host", "0.0.0.0",
+      "--port", String(FASTAPI_PORT),
+    ];
+    if (process.env.NODE_ENV !== "production") {
+      args.push("--reload");
+    }
+
+    fastapiProcess = spawn("python", args, {
       cwd: process.cwd(),
       stdio: ["ignore", "pipe", "pipe"],
     });
@@ -53,7 +62,7 @@ export async function registerRoutes(
     fs.mkdirSync(uploadDir, { recursive: true });
   }
 
-  app.use("/api", (req, res, next) => {
+  app.use("/api", (req, res) => {
     const proxyReq = http.request({
       hostname: "127.0.0.1",
       port: FASTAPI_PORT,
@@ -81,7 +90,7 @@ export async function registerRoutes(
     }
   });
 
-  app.use("/uploads", (req, res, next) => {
+  app.use("/uploads", (req, res) => {
     const filePath = path.join(uploadDir, req.path);
     if (fs.existsSync(filePath)) {
       res.sendFile(filePath);

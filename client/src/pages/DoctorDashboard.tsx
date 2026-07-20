@@ -19,7 +19,6 @@ import {
   CheckCircle2,
   XCircle,
   Stethoscope,
-  ChevronRight,
   Save,
   MapPin,
 } from "lucide-react";

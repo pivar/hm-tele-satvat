@@ -21,7 +21,6 @@ import {
   IndianRupee,
   Briefcase,
   Building2,
-  Search,
   CalendarCheck,
   CheckCircle2,
   ArrowLeft,
