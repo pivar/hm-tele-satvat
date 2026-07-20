@@ -73,12 +73,12 @@ export async function registerRoutes(
       res.writeHead(proxyRes.statusCode || 500, proxyRes.headers);
       proxyRes.pipe(res);
     });
-    
+
     proxyReq.on("error", (err: Error) => {
       console.error("Proxy error:", err.message);
       res.status(503).json({ message: "FastAPI backend not available" });
     });
-    
+
     if (req.rawBody) {
       proxyReq.write(req.rawBody);
       proxyReq.end();

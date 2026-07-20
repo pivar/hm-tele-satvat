@@ -4,7 +4,7 @@ from backend.database import Base
 
 class Patient(Base):
     __tablename__ = "patients"
-    
+
     id = Column(String, primary_key=True)
     mobile = Column(Text, unique=True, nullable=True)
     email = Column(Text, unique=True, nullable=True)
@@ -25,7 +25,7 @@ class Patient(Base):
 
 class OTPSession(Base):
     __tablename__ = "otp_sessions"
-    
+
     id = Column(String, primary_key=True)
     identifier = Column(Text, nullable=False)
     otp = Column(Text, nullable=False)
@@ -36,7 +36,7 @@ class OTPSession(Base):
 
 class Consultation(Base):
     __tablename__ = "consultations"
-    
+
     id = Column(String, primary_key=True)
     patient_id = Column(String, ForeignKey("patients.id"), nullable=False, name="patient_id")
     status = Column(Text, default="pending", nullable=False)
