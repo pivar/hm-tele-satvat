@@ -85,12 +85,12 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(otpSessions)
       .where(eq(otpSessions.identifier, identifier));
-    
+
     // Find the most recent unexpired, unused session
     const validSessions = sessions
       .filter(s => !s.isUsed && new Date(s.expiresAt) > now)
       .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
-    
+
     return validSessions[0];
   }
 

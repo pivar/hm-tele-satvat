@@ -1,7 +1,11 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "repl-nix-workspace"
+name = "homeohealth"
 version = "0.1.0"
-description = "Add your description here"
+description = "Homeopathic telemedicine web application"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.128.0",
@@ -9,6 +13,7 @@ dependencies = [
     "itsdangerous>=2.2.0",
     "psycopg2-binary>=2.9.11",
     "pydantic>=2.12.5",
+    "python-dotenv>=1.0.0",
     "python-multipart>=0.0.22",
     "sqlalchemy>=2.0.46",
     "starlette>=0.50.0",

@@ -1,0 +1,16 @@
+node_modules
+dist
+.DS_Store
+*.tar.gz
+__pycache__/
+*.pyc
+*.pyo
+.git
+.vscode
+.idea
+*.lnk
+uploads/
+coverage/
+.nyc_output
+npm-debug.log*
+*.log

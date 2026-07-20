@@ -116,10 +116,10 @@ async def request_otp(data: OTPRequest, db: Session = Depends(get_db)):
     identifier = data.identifier.strip()
     if not identifier:
         raise HTTPException(status_code=400, detail="Mobile or email is required")
-    
+
     otp = generate_otp()
     expires_at = datetime.now() + timedelta(minutes=10)
-    
+
     otp_session = OTPSession(
         id=str(uuid.uuid4()),
         identifier=identifier,
@@ -130,46 +130,46 @@ async def request_otp(data: OTPRequest, db: Session = Depends(get_db)):
     )
     db.add(otp_session)
     db.commit()
-    
+
     print(f"OTP for {identifier}: {otp}")
-    
+
     return {"message": "OTP sent successfully", "otp": otp}
 
 @app.post("/api/auth/verify-otp")
 async def verify_otp(data: OTPVerify, request: Request, db: Session = Depends(get_db)):
     identifier = data.identifier.strip()
     otp = data.otp.strip()
-    
+
     otp_session = db.query(OTPSession).filter(
         OTPSession.identifier == identifier,
         OTPSession.is_used == False
     ).order_by(OTPSession.created_at.desc()).first()
-    
+
     if not otp_session:
         raise HTTPException(status_code=400, detail="OTP expired or invalid. Please request a new one.")
-    
+
     if otp_session.expires_at < datetime.now():
         raise HTTPException(status_code=400, detail="OTP has expired")
-    
+
     if otp_session.attempts and otp_session.attempts >= 3:
         raise HTTPException(status_code=400, detail="Too many attempts. Please request a new OTP.")
-    
+
     if otp_session.otp != otp:
         otp_session.attempts = (otp_session.attempts or 0) + 1
         db.commit()
         raise HTTPException(status_code=400, detail="Invalid OTP")
-    
+
     otp_session.is_used = True
     db.commit()
-    
+
     is_email = "@" in identifier
     if is_email:
         patient = db.query(Patient).filter(Patient.email == identifier).first()
     else:
         patient = db.query(Patient).filter(Patient.mobile == identifier).first()
-    
+
     is_new_user = patient is None
-    
+
     if is_new_user:
         patient = Patient(
             id=str(uuid.uuid4()),
@@ -183,9 +183,9 @@ async def verify_otp(data: OTPVerify, request: Request, db: Session = Depends(ge
         db.add(patient)
         db.commit()
         db.refresh(patient)
-    
+
     request.session["patient_id"] = patient.id
-    
+
     return {
         "message": "OTP verified successfully",
         "patient": patient_to_response(patient),
@@ -197,11 +197,11 @@ async def get_current_user(request: Request, db: Session = Depends(get_db)):
     patient_id = request.session.get("patient_id")
     if not patient_id:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    
+
     patient = db.query(Patient).filter(Patient.id == patient_id).first()
     if not patient:
         raise HTTPException(status_code=401, detail="Patient not found")
-    
+
     return {"patient": patient_to_response(patient)}
 
 @app.post("/api/auth/logout")
@@ -214,11 +214,11 @@ async def update_profile(data: PatientProfile, request: Request, db: Session = D
     patient_id = request.session.get("patient_id")
     if not patient_id:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    
+
     patient = db.query(Patient).filter(Patient.id == patient_id).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
-    
+
     patient.full_name = data.fullName
     patient.age = data.age
     patient.gender = data.gender
@@ -236,10 +236,10 @@ async def update_profile(data: PatientProfile, request: Request, db: Session = D
     patient.current_medications = data.currentMedications or ""
     patient.lifestyle = data.lifestyle or ""
     patient.is_profile_complete = True
-    
+
     db.commit()
     db.refresh(patient)
-    
+
     return {"patient": patient_to_response(patient)}
 
 @app.get("/api/consultations")
@@ -247,11 +247,11 @@ async def get_consultations(request: Request, db: Session = Depends(get_db)):
     patient_id = request.session.get("patient_id")
     if not patient_id:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    
+
     consultations = db.query(Consultation).filter(
         Consultation.patient_id == patient_id
     ).order_by(Consultation.created_at.desc()).all()
-    
+
     return [consultation_to_response(c) for c in consultations]
 
 @app.post("/api/consultations")
@@ -263,14 +263,14 @@ async def create_consultation(
     patient_id = request.session.get("patient_id")
     if not patient_id:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    
+
     filename = f"{patient_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{audio.filename}"
     filepath = os.path.join("uploads", filename)
-    
+
     with open(filepath, "wb") as f:
         content = await audio.read()
         f.write(content)
-    
+
     transcripts = [
         "Patient describes experiencing mild headaches for the past week, primarily in the morning.",
         "Patient reports digestive issues including occasional bloating and discomfort after meals.",
@@ -279,7 +279,7 @@ async def create_consultation(
         "Patient reports seasonal allergies with symptoms including sneezing and runny nose.",
     ]
     transcript = random.choice(transcripts)
-    
+
     consultation = Consultation(
         id=str(uuid.uuid4()),
         patient_id=patient_id,
@@ -290,7 +290,7 @@ async def create_consultation(
     db.add(consultation)
     db.commit()
     db.refresh(consultation)
-    
+
     return consultation_to_response(consultation)
 
 # --- Doctor endpoints ---
@@ -406,13 +406,13 @@ async def seed_doctors():
                 c_address = data.pop("clinic_address")
                 c_city = data.pop("city")
                 c_state = data.pop("state")
-                
+
                 if c_name not in clinics_map:
                     clinic_id = "clinic-" + str(uuid.uuid4())[:8]
                     clinic = Clinic(id=clinic_id, name=c_name, address=c_address, city=c_city, state=c_state)
                     db.add(clinic)
                     clinics_map[c_name] = clinic_id
-                
+
                 data["clinic_id"] = clinics_map[c_name]
                 doc = Doctor(**data)
                 db.add(doc)
@@ -699,4 +699,3 @@ async def update_appointment_status(
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=5001)
-
