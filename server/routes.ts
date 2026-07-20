@@ -1,5 +1,5 @@
-import type { Express, Request, Response, NextFunction } from "express";
-import { createServer, type Server } from "http";
+import type { Express } from "express";
+import type { Server } from "http";
 import http from "http";
 import { spawn } from "child_process";
 import path from "path";
@@ -53,7 +53,7 @@ export async function registerRoutes(
     fs.mkdirSync(uploadDir, { recursive: true });
   }
 
-  app.use("/api", (req, res, next) => {
+  app.use("/api", (req, res) => {
     const proxyReq = http.request({
       hostname: "127.0.0.1",
       port: FASTAPI_PORT,
@@ -81,7 +81,7 @@ export async function registerRoutes(
     }
   });
 
-  app.use("/uploads", (req, res, next) => {
+  app.use("/uploads", (req, res) => {
     const filePath = path.join(uploadDir, req.path);
     if (fs.existsSync(filePath)) {
       res.sendFile(filePath);
